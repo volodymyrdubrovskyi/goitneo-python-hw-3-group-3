@@ -2,6 +2,7 @@ from collections import UserDict
 import re
 import datetime
 import pickle
+import birthdays
 
 # обработка ошибки количества символов в номере телефона
 class LenPhoneError(Exception):
@@ -148,6 +149,15 @@ class AddressBook(UserDict):
         with open('addrbook.dat', 'rb') as fh:
             return pickle.load(fh)
 
+    # создает словарь с днями рождения в нужном формате    
+    def birthday_list(self):
+        blist = []
+        for name, rec in self.data.items():
+            # print('>>>', rec.bday)
+            if rec.bday:
+                blist.append({'name' : name, 'birthday' : rec.bday.bday})
+        return blist
+
 def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
@@ -205,14 +215,55 @@ def main():
                     except LenPhoneError:
                         print('Error: Phone must be 10 symbols')
                     except PhoneNotFindError:
-                        print('Error: Phone to change not found.')
+                        print('Error: Phone to change is not found.')
                 else:
                     print('Error: Invalid command format.')    
+
+            elif command == 'phone':
+                if len(args) == 1 and len(args[0]) > 0:
+                    if args[0] in abook.data:
+                        print(abook.data[args[0]])
+                    else:
+                        print(f'Not find {args[0]}')    
+                else:
+                    print('Error: Invalid command format.')
+
+            elif command == 'add-birthday':
+                if len(args) == 2 and len(args[0]) > 0:
+                    if args[0] in abook.data:
+                        try:
+                            abook.data[args[0]].bday = Birthday(args[1])
+                            print('Birthday added sucessfully.')
+                        except DateFormatError:
+                            print('Error: Invalid date format.')
+                    else:
+                        print(f'Not find {args[0]}')    
+                else:
+                    print('Error: Invalid command format.')
+
+            elif command == 'show-birthday':
+                if len(args) == 1 and len(args[0]) > 0:
+                    if args[0] in abook.data:
+                            if abook.data[args[0]].bday:
+                                print(abook.data[args[0]].bday)
+                            else:
+                                print('Error: no birthday data.')
+                    else:
+                        print(f'Not find {args[0]}')    
+                else:
+                    print('Error: Invalid command format.')
+
+            # elif command == 'bd':
+            #     users = abook.birthday_list()
+            #     print(users)
+
+            elif command == 'birthdays':
+                users = abook.birthday_list()
+                birthdays.get_birthdays_per_week(users)
 
             elif command == 'all':
                 for _, record in abook.data.items():
                     print(record)
-
             else:
                 print('Error: Invalid command.')
 
