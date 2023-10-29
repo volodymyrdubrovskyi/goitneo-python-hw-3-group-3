@@ -94,12 +94,16 @@ class Record:
     def edit_phone(self, phone_old, phone_new):
         if len(phone_new) != Phone.MAX_PHONE_LEN:
             raise LenPhoneError
-        elif not phone.isdigit():
+        elif not phone_new.isdigit():
             raise TypePhoneError
         else:
+            sucsess = False
             for phone in self.phones:
                 if phone.value == phone_old:
                     phone.value = phone_new
+                    sucsess = True
+            if not sucsess:
+                raise PhoneNotFindError
 
     # поиск номера телефона в текущей записи
     def find_phone(self, phone):
@@ -150,12 +154,8 @@ def parse_input(user_input):
     return cmd, *args
 
 def main():
-    # try:
-    #     bday = Birthday('22.12.2003')
-    #     print(bday)
-    # except DateFormatError:
-    #     print('Wrong data format. Please use: DD.MM.YYYY')
-    print("Welcome to the assistant bot!")
+
+    print('Welcome to the assistant bot!')
     
     # Загружаем адресную книгу, если находим. 
     # Если не находим: Делаем пустую AdressBook
@@ -169,16 +169,16 @@ def main():
         if user_input:
             command, *args = parse_input(user_input)
             
-            if command in ["close", "exit"]:
+            if command in ['close', 'exit']:
                 # выход, тут сохраняем AdressBook
                 abook.save_to_file()
-                print("Good bye!")
+                print('Good bye!')
                 break
             
-            elif command == "hello":
-                print("How can I help you?")
+            elif command == 'hello':
+                print('How can I help you?')
             
-            elif command == "add":
+            elif command == 'add':
                 if len(args) == 2 and len(args[0]) > 0:
                     try:
                         if args[0] in abook.data:
@@ -190,16 +190,31 @@ def main():
                             abook.add_record(rec)
                         print('Contact added sucessfully.')
                     except LenPhoneError:
-                        print('Phone must be 10 symbols')
+                        print('Error: Phone must be 10 symbols')
                 else:
-                    print('Invalid command format.')
+                    print('Error: Invalid command format.')
             
-            elif command == "all":
+            elif command == 'change':
+                if len(args) == 3 and len(args[0]) > 0:
+                    try:
+                        rec = abook.find(args[0])
+                        rec.edit_phone(args[1], args[2])
+                        print('Phone changed sucessfully.')
+                    except RecordNotFindError:
+                        print('Error: User not found.')
+                    except LenPhoneError:
+                        print('Error: Phone must be 10 symbols')
+                    except PhoneNotFindError:
+                        print('Error: Phone to change not found.')
+                else:
+                    print('Error: Invalid command format.')    
+
+            elif command == 'all':
                 for _, record in abook.data.items():
                     print(record)
 
             else:
-                print('Invalid command.')
+                print('Error: Invalid command.')
 
 if __name__ == '__main__':
     main()
